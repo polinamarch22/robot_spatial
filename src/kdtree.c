@@ -3,6 +3,7 @@
 #include <math.h>
 #include <float.h>
 
+// Создание узла дерева
 KDNode* kd_create_node(Point p, int axis) {
     KDNode* node = (KDNode*)malloc(sizeof(KDNode));
     node->point = p;
@@ -11,11 +12,13 @@ KDNode* kd_create_node(Point p, int axis) {
     return node;
 }
 
+// Квадрат расстояния между двумя точками
 static double dist_sq(Point a, Point b) {
     double dx = a.x - b.x, dy = a.y - b.y;
     return dx*dx + dy*dy;
 }
 
+// Вставка точки в дерево
 KDNode* kd_insert(KDNode* root, Point p, int depth) {
     if (!root) {
         return kd_create_node(p, depth % 2);
@@ -28,13 +31,18 @@ KDNode* kd_insert(KDNode* root, Point p, int depth) {
     return root;
 }
 
+// Рекурсивный поиск ближайшего соседа
 static void nearest(KDNode* root, Point target, KDNode** best, double* best_dist, int depth) {
     if (!root) return;
+    
+    // Проверка текущего узла
     double d = dist_sq(root->point, target);
     if (d < *best_dist) {
         *best_dist = d;
         *best = root;
     }
+    
+    // Выбор порядка обхода ветвей
     int axis = depth % 2;
     KDNode *first, *second;
     if ((axis == 0 && target.x < root->point.x) || (axis == 1 && target.y < root->point.y)) {
@@ -44,13 +52,18 @@ static void nearest(KDNode* root, Point target, KDNode** best, double* best_dist
         first = root->right;
         second = root->left;
     }
+    
+    // Сначала идём в перспективную ветвь
     nearest(first, target, best, best_dist, depth + 1);
+    
+    // Проверяем, нужно ли проверять вторую ветвь
     double diff = (axis == 0) ? target.x - root->point.x : target.y - root->point.y;
     if (diff * diff < *best_dist) {
         nearest(second, target, best, best_dist, depth + 1);
     }
 }
 
+// Поиск ближайшей точки (публичная функция)
 Point kd_nearest(KDNode* root, Point target) {
     if (!root) return (Point){0,0};
     KDNode* best = root;
@@ -59,6 +72,7 @@ Point kd_nearest(KDNode* root, Point target) {
     return best->point;
 }
 
+// Освобождение памяти дерева
 void kd_free(KDNode* root) {
     if (!root) return;
     kd_free(root->left);

@@ -4,21 +4,27 @@
 #include <string.h>
 #include <stdio.h>
 
+// Евклидово расстояние между двумя точками
 static double distance(Point a, Point b) {
     double dx = a.x - b.x, dy = a.y - b.y;
     return sqrt(dx*dx + dy*dy);
 }
 
+// Алгоритм Fuzzy C-means
 double** fuzzy_cmeans(Point* points, size_t n, int c, int m, int max_iter, double eps, Point* centroids) {
+    // Выделение памяти под матрицу принадлежности
     double** U = malloc(c * sizeof(double*));
     for (int i = 0; i < c; i++)
         U[i] = malloc(n * sizeof(double));
     
+    // Инициализация центроидов случайными точками
     for (int i = 0; i < c; i++) {
         centroids[i] = points[rand() % n];
     }
     
+    // Основной цикл алгоритма
     for (int iter = 0; iter < max_iter; iter++) {
+        // Обновление матрицы принадлежности
         for (int i = 0; i < c; i++) {
             for (size_t j = 0; j < n; j++) {
                 double d_ij = distance(centroids[i], points[j]);
@@ -33,6 +39,7 @@ double** fuzzy_cmeans(Point* points, size_t n, int c, int m, int max_iter, doubl
             }
         }
         
+        // Обновление центроидов
         Point new_centroids[c];
         for (int i = 0; i < c; i++) {
             double sum_u = 0, sum_ux = 0, sum_uy = 0;
@@ -46,6 +53,7 @@ double** fuzzy_cmeans(Point* points, size_t n, int c, int m, int max_iter, doubl
             new_centroids[i].y = sum_uy / sum_u;
         }
         
+        // Проверка сходимости
         double change = 0;
         for (int i = 0; i < c; i++) {
             change += distance(centroids[i], new_centroids[i]);
